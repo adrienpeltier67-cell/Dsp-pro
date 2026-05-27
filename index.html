@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DSP Pro">
+<meta name="application-name" content="DSP Pro">
+<meta name="theme-color" content="#0d0f14">
+<meta name="description" content="Outil de chiffrage Débosselage Sans Peinture">
+<link rel="manifest" href="manifest.json">
+<!-- Icônes Apple -->
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>DSP Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e28;--border:#252a38;
+  --accent:#3b82f6;--accent2:#60a5fa;--glow:rgba(59,130,246,.15);
+  --green:#22c55e;--orange:#f59e0b;--red:#ef4444;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#4b5563;
+  --card:#141720;--inp:#1c2030;--r:12px;
+  --nav-h:56px;--hdr-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100%;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));}
+
+/* ── HEADER ── */
+.hdr{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:var(--hdr-h);
+  background:rgba(13,15,20,.93);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;
+}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.hdr-right{font-size:.72rem;color:var(--text3);}
+
+/* ── BOTTOM NAV ── */
+.bnav{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  height:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:rgba(13,15,20,.96);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  display:flex;align-items:stretch;
+}
+.bnav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;border:none;background:none;color:var(--text3);
+  font-family:'Syne',sans-serif;font-size:.6rem;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+  transition:color .2s;padding:0 4px;
+}
+.bnav-btn .ico{font-size:1.3rem;line-height:1;}
+.bnav-btn.active{color:var(--accent2);}
+.bnav-btn.active .ico-bar{
+  display:block;width:24px;height:2px;background:var(--accent);
+  border-radius:2px;margin:2px auto 0;
+}
+.ico-bar{display:none;}
+
+/* ── MAIN ── */
+main{
+  padding-top:calc(var(--hdr-h) + 12px);
+  max-width:680px;margin:0 auto;padding-left:12px;padding-right:12px;
+}
+@media(min-width:700px){main{padding-left:20px;padding-right:20px;}}
+
+/* ── PANELS ── */
+.panel{display:none;animation:up .25s ease;}
+.panel.active{display:block;}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SECTION ── */
+.sec{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px;margin-bottom:12px;
+}
+.sec-title{
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.68rem;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--accent2);
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── FORM GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+@media(max-width:420px){.g2,.g3{grid-template-columns:1fr;}}
+@media(min-width:421px) and (max-width:560px){.g3{grid-template-columns:1fr 1fr;}}
+
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:.67rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;}
+.field input,.field select,.field textarea{
+  background:var(--inp);border:1px solid var(--border);
+  color:var(--text);font-family:'DM Mono',monospace;font-size:.9rem;
+  padding:10px 12px;border-radius:8px;outline:none;width:100%;
+  -webkit-appearance:none;appearance:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow);}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+
+/* ── ELEMENT CARDS (mobile-first) ── */
+.el-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:12px;margin-bottom:8px;
+}
+.el-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.el-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--text);}
+.el-total{font-size:.85rem;font-weight:600;color:var(--green);}
+.el-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.el-input-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.el-input-wrap label{font-size:.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.el-input-wrap input{
+  width:100%;text-align:center;background:var(--inp);border:1px solid var(--border);
+  color:var(--text);font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:600;
+  padding:8px 4px;border-radius:8px;outline:none;
+  -webkit-appearance:none;
+}
+.el-input-wrap input:focus{border-color:var(--accent);}
+.el-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);gap:6px;flex-wrap:wrap;}
+.alu-btn{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;
+  border-radius:7px;border:1px solid var(--border);background:var(--inp);
+  color:var(--text2);font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;
+  cursor:pointer;transition:all .15s;letter-spacing:.04em;
+}
+.alu-btn.on{background:rgba(59,130,246,.2);border-color:var(--accent);color:var(--accent2);}
+.alu-btn.ptp-btn{background:var(--inp);border-color:var(--border);color:var(--text2);}
+.alu-btn.ptp-btn.on{background:rgba(245,158,11,.22);border-color:var(--orange);color:var(--orange);}
+.alu-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.pu-label{font-size:.72rem;color:var(--text2);}
+.pu-val{font-size:.8rem;color:var(--accent2);font-weight:600;}
+
+/* ── DEM CARD ── */
+.dem-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:12px;margin-bottom:8px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.dem-left{flex:1;}
+.dem-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;margin-bottom:6px;}
+.dem-prix{font-size:.72rem;color:var(--text2);}
+.dem-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.dem-qty{display:flex;align-items:center;gap:6px;}
+.qty-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:var(--inp);color:var(--text);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.qty-val{min-width:20px;text-align:center;font-size:.95rem;font-weight:600;}
+.dem-total{font-size:.85rem;font-weight:600;color:var(--green);}
+
+/* ── RECAP ── */
+.recap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-top:10px;}
+.recap-row{display:flex;justify-content:space-between;padding:10px 14px;font-size:.85rem;}
+.recap-row+.recap-row{border-top:1px solid var(--border);}
+.recap-row .lbl{color:var(--text2);}
+.recap-row.remise .val{color:var(--red);}
+.recap-row.ttc{background:var(--glow);}
+.recap-row.ttc .lbl{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;}
+.recap-row.ttc .val{color:var(--accent2);font-size:1rem;font-weight:700;}
+.recap-row .val{font-weight:600;}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.btn{
+  flex:1;min-width:120px;padding:13px 16px;border-radius:10px;border:none;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;
+  letter-spacing:.03em;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-pdf{background:var(--accent);color:#fff;}
+.btn-pdf:active{transform:scale(.97);}
+.btn-reset{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+
+/* ── STATS GRELE ── */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+@media(min-width:500px){.stats{grid-template-columns:repeat(4,1fr);}}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.stat-val{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;}
+.stat-lbl{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-top:2px;}
+.stat.blue .stat-val{color:var(--accent2);}
+.stat.green .stat-val{color:var(--green);}
+
+/* ── TARIFS ── */
+.tarif-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+@media(max-width:400px){.tarif-cards{grid-template-columns:1fr;}}
+.tarif-c{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.tarif-c .tc-size{font-family:'Syne',sans-serif;font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin-bottom:6px;}
+.tarif-c input{width:100%;text-align:center;background:transparent;border:none;color:var(--accent2);font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;outline:none;padding:0;}
+.tarif-c .tc-unit{font-size:.68rem;color:var(--text3);margin-top:2px;}
+
+/* ── PARTNER BADGE ── */
+.part-row{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px;}
+.part-row label{font-size:.72rem;color:var(--text2);white-space:nowrap;}
+.part-row select{flex:1;background:var(--inp);border:1px solid var(--border);color:var(--text);font-family:'DM Mono';padding:8px 10px;border-radius:7px;font-size:.83rem;}
+.part-badge{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--green);padding:4px 10px;border-radius:5px;font-size:.72rem;font-weight:600;white-space:nowrap;}
+
+/* ── PARTENAIRE EDIT ── */
+.part-edit{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;}
+.part-edit-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;}
+.part-del{width:36px;height:36px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:7px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:end;}
+.degressif-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+/* ── DEVIS LINES ── */
+.devis-line{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;}
+.devis-line-head{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px;}
+.devis-line-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.devis-del{width:34px;height:34px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:7px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+.devis-total-line{display:flex;justify-content:flex-end;margin-top:6px;font-size:.82rem;color:var(--green);font-weight:600;}
+
+/* ── ADD BTN ── */
+.add-btn{width:100%;padding:11px;border-radius:9px;border:1px dashed var(--border);background:none;color:var(--text2);font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.04em;}
+.add-btn:active{background:var(--bg3);}
+
+/* ── SCROLL FIX ── */
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
+
+/* ── GRILLE EDITABLE ── */
+.grille-table{border-collapse:collapse;font-size:.75rem;min-width:340px;width:100%;}
+.grille-table th{background:var(--bg3);color:var(--accent2);padding:7px 6px;text-align:center;border:1px solid var(--border);font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.05em;white-space:nowrap;}
+.grille-table th:first-child{text-align:left;min-width:52px;color:var(--text2);}
+.grille-table td{border:1px solid var(--border);padding:2px 3px;text-align:center;vertical-align:middle;}
+.grille-table tr:nth-child(even) td{background:rgba(255,255,255,.018);}
+.grille-table input.gc{width:52px;background:var(--inp);border:none;color:var(--text);text-align:center;font-family:'DM Mono',monospace;font-size:.78rem;padding:5px 2px;border-radius:5px;outline:none;}
+.grille-table input.gc:focus{background:rgba(59,130,246,.18);color:var(--accent2);}
+.grille-table .nb-col{color:var(--text2);font-weight:700;font-size:.72rem;padding:5px 8px;background:var(--bg2);white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="logo"><div class="logo-dot"></div>DSP PRO</div>
+  <div class="hdr-right" id="hdr-label">Fiche DSP</div>
+</header>
+
+<main>
+
+  <!-- ═══ FICHE DSP ═══ -->
+  <div class="panel active" id="panel-fiche">
+
+    <div class="sec">
+      <div class="sec-title">Fiche Client</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="type-part" class="alu-btn on" style="flex:1;justify-content:center;" onclick="setClientType('particulier')">👤 Particulier</button>
+        <button id="type-pro" class="alu-btn" style="flex:1;justify-content:center;" onclick="setClientType('professionnel')">🏢 Professionnel</button>
+      </div>
+      <div class="g2">
+        <div class="field"><label id="c-nom-label">Nom / Prénom</label><input type="text" id="c-nom" placeholder="Jean Dupont" oninput="syncClientToDevis()"></div>
+        <div class="field"><label>Téléphone</label><input type="tel" id="c-tel" placeholder="06 00 00 00 00" oninput="syncClientToDevis()"></div>
+        <div class="field" id="c-societe-field" style="display:none"><label>Société</label><input type="text" id="c-societe" placeholder="Nom de la société" oninput="syncClientToDevis()"></div>
+        <div class="field" id="c-siret-field" style="display:none"><label>SIRET</label><input type="text" id="c-siret" placeholder="000 000 000 00000" inputmode="numeric" oninput="syncClientToDevis()"></div>
+        <div class="field" style="grid-column:span 2"><label>Adresse</label><input type="text" id="c-adresse" placeholder="1 rue de la Paix, 67000 Strasbourg" oninput="syncClientToDevis()"></div>
+        <div class="field"><label>Email</label><input type="email" id="c-email" placeholder="client@email.fr" oninput="syncClientToDevis()"></div>
+        <div class="field"><label>N° Police assurance</label><input type="text" id="c-police" placeholder="POL-XXXX" oninput="syncClientToDevis()"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Véhicule</div>
+      <div class="g2">
+        <div class="field"><label>Marque / Modèle</label><input type="text" id="f-modele" placeholder="Peugeot 308" inputmode="text" oninput="syncDevisFromFiche()"></div>
+        <div class="field"><label>Immatriculation</label><input type="text" id="f-immat" placeholder="AB-123-CD" inputmode="text" autocapitalize="characters" oninput="syncDevisFromFiche()"></div>
+        <div class="field"><label>Année</label><input type="text" id="f-annee" placeholder="2022" inputmode="numeric"></div>
+        <div class="field"><label>Date</label><input type="date" id="f-date"></div>
+        <div class="field"><label>Technicien</label><input type="text" id="f-tech" placeholder="Prénom Nom"></div>
+        <div class="field"><label>N° Dossier</label><input type="text" id="f-dossier" placeholder="DSP-001"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Partenaire</div>
+      <div class="part-row">
+        <label>Pro :</label>
+        <select id="f-part" onchange="partChange('f')"></select>
+        <span class="part-badge" id="f-pbadge" style="display:none"></span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Éléments</div>
+      <div id="fiche-cards"></div>
+    </div>
+
+    <!-- TOTAL BOSSES — toujours visible -->
+    <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:.72rem;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;">Total des bosses</span>
+        <div style="display:flex;align-items:baseline;gap:6px;">
+          <span style="font-size:.75rem;color:var(--text2);">Total :</span>
+          <span id="total-bosses-grand" style="font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--accent2);line-height:1;">0</span>
+          <span style="font-size:.75rem;color:var(--text2);">impacts</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;" id="total-bosses-cols">
+        <div style="text-align:center;background:var(--bg3);border-radius:7px;padding:8px 4px;"><div style="font-size:.58rem;color:var(--text3);font-family:'Syne',sans-serif;font-weight:700;margin-bottom:3px;">Ø10-15</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text3);">0</div></div>
+        <div style="text-align:center;background:var(--bg3);border-radius:7px;padding:8px 4px;"><div style="font-size:.58rem;color:var(--text3);font-family:'Syne',sans-serif;font-weight:700;margin-bottom:3px;">Ø20-25</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text3);">0</div></div>
+        <div style="text-align:center;background:var(--bg3);border-radius:7px;padding:8px 4px;"><div style="font-size:.58rem;color:var(--text3);font-family:'Syne',sans-serif;font-weight:700;margin-bottom:3px;">Ø30-35</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text3);">0</div></div>
+        <div style="text-align:center;background:var(--bg3);border-radius:7px;padding:8px 4px;"><div style="font-size:.58rem;color:var(--text3);font-family:'Syne',sans-serif;font-weight:700;margin-bottom:3px;">Ø40-45</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text3);">0</div></div>
+        <div style="text-align:center;background:var(--bg3);border-radius:7px;padding:8px 4px;"><div style="font-size:.58rem;color:var(--text3);font-family:'Syne',sans-serif;font-weight:700;margin-bottom:3px;">Ø>45</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text3);">0</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Démontages</div>
+      <div id="dem-cards"></div>
+    </div>
+
+    <div class="recap" id="recap-fiche"></div>
+    <div class="btn-row" style="margin-bottom:16px;">
+      <button class="btn btn-reset" onclick="resetPanel('fiche')">↺ Reset</button>
+      <button class="btn btn-pdf" onclick="exportPDF('fiche')">⬇ PDF</button>
+    </div>
+  </div>
+
+  <!-- ═══ DEVIS ═══ -->
+  <div class="panel" id="panel-devis">
+    <div class="sec" style="background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.25);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.2rem">⚡</span>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;color:var(--accent2)">Remplissage automatique</div>
+          <div style="font-size:.72rem;color:var(--text2);margin-top:2px">Les prestations sont générées depuis la Fiche DSP. Tu peux modifier ou ajouter des lignes.</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Société</div>
+      <div class="g2">
+        <div class="field" style="grid-column:span 2"><label>Nom société</label><input type="text" id="ds-nom" placeholder="DSP Pro SASU"></div>
+        <div class="field"><label>SIRET</label><input type="text" id="ds-siret" inputmode="numeric"></div>
+        <div class="field"><label>Tél</label><input type="tel" id="ds-tel"></div>
+        <div class="field" style="grid-column:span 2"><label>Adresse</label><input type="text" id="ds-adresse"></div>
+        <div class="field" style="grid-column:span 2"><label>Email</label><input type="email" id="ds-email"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Client</div>
+      <div class="g2">
+        <div class="field"><label>Nom client</label><input type="text" id="dc-nom"></div>
+        <div class="field"><label>N° Police</label><input type="text" id="dc-police"></div>
+        <div class="field" style="grid-column:span 2"><label>Adresse client</label><input type="text" id="dc-adresse"></div>
+        <div class="field"><label>Tél client</label><input type="tel" id="dc-tel"></div>
+        <div class="field"><label>N° Devis</label><input type="text" id="dc-num" placeholder="DEV-001"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Véhicule</div>
+      <div class="g2">
+        <div class="field"><label>Modèle</label><input type="text" id="dv-modele"></div>
+        <div class="field"><label>Immatriculation</label><input type="text" id="dv-immat" autocapitalize="characters"></div>
+        <div class="field"><label>Couleur</label><input type="text" id="dv-couleur"></div>
+        <div class="field"><label>Date</label><input type="date" id="dv-date"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Partenaire</div>
+      <div class="part-row">
+        <label>Pro :</label>
+        <select id="d-part" onchange="partChange('d')"></select>
+        <span class="part-badge" id="d-pbadge" style="display:none"></span>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Prestations</div>
+      <div id="devis-lines"></div>
+      <button class="add-btn" onclick="addDevisLine()">+ Ajouter une prestation</button>
+    </div>
+    <div class="recap" id="recap-devis"></div>
+    <div class="btn-row" style="margin-bottom:16px;">
+      <button class="btn btn-reset" onclick="resetPanel('devis')">↺ Reset</button>
+      <button class="btn btn-pdf" onclick="exportPDF('devis')">⬇ PDF</button>
+    </div>
+  </div>
+
+  <!-- ═══ GRELE ═══ -->
+
+  <!-- ═══ TARIFS ═══ -->
+  <div class="panel" id="panel-tarifs">
+    <div class="sec" style="background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.25);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.4rem">📊</span>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--accent2)">Grille Tarifaire Grêle 2023</div>
+          <div style="font-size:.72rem;color:var(--text2);margin-top:2px">Prix issus de ta grille officielle CPH / Ailes-Portes. Les majorations ci-dessous s'appliquent en plus.</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Majorations</div>
+      <div class="g2">
+        <div class="field"><label>Majoration Alu (%)</label><input type="number" id="t-alu" value="20" inputmode="decimal" oninput="updateAll()"></div>
+        <div class="field"><label>Push to Paint — réduction (%)</label><input type="number" id="t-ptp" value="25" inputmode="decimal" oninput="updateAll()" style="color:var(--orange)"></div>
+        <div class="field"><label>TVA (%)</label><input type="number" id="t-tva" value="20" inputmode="decimal" oninput="updateAll()"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Grille Tarifaire — Capot / Pavillon / Hayon</div>
+      <div style="font-size:.7rem;color:var(--text3);margin-bottom:10px;">Colonnes : Ø10 · Ø20 · Ø30 · Ø40 · Ø>50</div>
+      <div id="grille-cph-edit" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Grille Tarifaire — Ailes / Portes / Brancards</div>
+      <div style="font-size:.7rem;color:var(--text3);margin-bottom:10px;">Colonnes : Ø15 · Ø25 · Ø35 · Ø45 · Ø>45</div>
+      <div id="grille-ap-edit" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Forfaits Démontage (€ HT)</div>
+      <div class="g3">
+        <div class="field"><label>Ciel de toit</label><input type="number" id="t-ciel" value="150" inputmode="decimal" oninput="updateAll()"></div>
+        <div class="field"><label>Capot</label><input type="number" id="t-capot" value="80" inputmode="decimal" oninput="updateAll()"></div>
+        <div class="field"><label>Hayon / Coffre</label><input type="number" id="t-hayon" value="90" inputmode="decimal" oninput="updateAll()"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Partenaires Pro</div>
+      <div id="parts-edit"></div>
+      <button class="add-btn" onclick="addPart()">+ Ajouter un partenaire</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="bnav-btn active" onclick="goTab('fiche',this)"><span class="ico">📋</span><span>Fiche</span><span class="ico-bar"></span></button>
+  <button class="bnav-btn" onclick="goTab('devis',this)"><span class="ico">📄</span><span>Devis</span><span class="ico-bar"></span></button>
+  <button class="bnav-btn" onclick="goTab('tarifs',this)"><span class="ico">⚙️</span><span>Tarifs</span><span class="ico-bar"></span></button>
+</nav>
+
+<script>
+// ─── DATA ───────────────────────────────────────
+const ELEMENTS=['Capot','Aile avant G','Porte avant G','Porte arrière G','Aile arrière G','Montant G','Hayon / Coffre','Aile arrière D','Porte arrière D','Porte avant D','Aile avant D','Montant D','Pavillon','Casquette hayon'];
+const DEMS=[{label:'Démontage ciel de toit',key:'ciel'},{label:'Démontage capot',key:'capot'},{label:'Démontage hayon / coffre',key:'hayon'}];
+const DEG_PAL=[{l:'10–19',k:'dg10',d:5},{l:'20–49',k:'dg20',d:10},{l:'50–99',k:'dg50',d:15},{l:'100–199',k:'dg100',d:20},{l:'200–499',k:'dg200',d:25},{l:'500–999',k:'dg500',d:30},{l:'1000+',k:'dg1000',d:35}];
+let partners=[{nom:'Garage Exemple',type:'Garage',rem:10},{nom:'Assurance Exemple',type:'Assurance',rem:15},{nom:'Expert Exemple',type:'Expert',rem:12}];
+const aluState={};
+const ptpState={};  // Push to Paint state par élément
+let devisLines=[];
+
+// ─── GRILLE TARIFAIRE GRELE 2023 (ta vraie grille) ──
+// Capot-Pavillon-Hayon : colonnes D1(Ø10) D2(Ø20) D3(Ø30) D4(Ø40) D5(Ø50)
+// Brancards          : colonnes D1(Ø15) D2(Ø25) D3(Ø35) D4(Ø45) D5(>45)
+// Ailes-Portes       : colonnes D1(Ø15) D2(Ø25) D3(Ø35) D4(Ø45) D5(>45)
+// Clé = nb impacts
+// grille[type][nb] = [d1,d2,d3,d4,d5]
+const GRILLE_CPH = {
+  1:[50,60,70,80,90],2:[63,75,88,100,120],3:[75,88,113,138,175],
+  4:[88,100,138,163,213],5:[100,113,150,188,238],6:[113,125,163,213,263],
+  7:[125,138,175,225,288],8:[138,150,188,250,313],9:[150,163,200,263,338],
+  10:[163,175,213,288,363],11:[163,175,225,300,388],12:[175,188,238,325,413],
+  13:[175,175,250,338,438],14:[188,200,263,363,463],15:[188,188,275,375,488],
+  16:[200,200,288,400,513],17:[200,213,300,413,538],18:[213,213,313,438,563],
+  19:[213,213,325,450,588],20:[225,225,338,475,613],21:[225,225,350,488,638],
+  22:[225,225,363,500,650],23:[250,250,363,513,675],24:[250,250,375,525,688],
+  25:[263,263,388,538,713],26:[263,263,400,550,725],27:[275,275,413,563,750],
+  28:[288,288,425,575,763],29:[288,288,438,588,788],30:[288,288,438,600,800],
+  35:[300,300,450,614,825],40:[313,313,463,638,863],45:[325,325,475,650,875],
+  50:[338,338,488,663,900],55:[338,338,500,676,914],60:[350,350,513,700,938],
+  65:[350,350,525,713,950],70:[363,363,525,725,975],75:[375,375,538,750,1000],
+  80:[388,388,550,763,1025],90:[413,413,563,775,1050],100:[413,413,575,788,1075],
+  110:[430,430,600,800,1100],120:[430,430,614,825,1025],130:[460,460,630,838,1050],
+  140:[460,460,630,850,1075],150:[480,480,650,863,1100],160:[510,510,670,875,1125],
+  170:[510,510,680,888,1150],180:[560,560,770,1080,1480],200:[610,610,840,1180,1620],
+  220:[660,660,910,1280,1760],240:[710,710,980,1380,1900],260:[750,750,1060,1480,1530],
+  300:[790,790,1140,1580,1580],350:[830,830,1220,1680,1680],400:[890,890,1440,1830,1830],
+  450:[930,930,1420,1930,1930],500:[990,990,1540,2080,2080],
+  600:[1090,1090,1740,2330,2330],700:[1190,1190,1940,2580,2580]
+};
+const GRILLE_AP = {
+  1:[50,60,80,90,100],2:[60,70,90,120,140],3:[70,80,110,140,170],
+  4:[80,100,130,170,210],5:[90,110,150,190,240],6:[100,130,160,210,270],
+  7:[110,130,160,210,270],8:[120,160,200,250,320],9:[130,160,210,260,320],
+  10:[130,170,230,290,370],11:[140,180,240,310,390],12:[140,190,260,330,420],
+  13:[150,200,270,350,440],14:[150,210,290,370,470],15:[160,220,310,390,490],
+  16:[160,230,320,410,520],17:[170,240,330,430,540],18:[180,250,350,450,570],
+  19:[180,260,360,470,590],20:[180,270,380,490,620],21:[190,280,390,510,640],
+  22:[190,280,390,510,640],23:[200,290,400,530,680],24:[200,300,420,550,700],
+  25:[210,310,430,570,720],26:[220,320,440,590,740],27:[220,330,450,600,760],
+  28:[230,340,460,610,780],29:[230,350,470,630,800],30:[240,350,480,640,820],
+  35:[250,380,500,670,860],40:[260,390,520,700,900],45:[270,400,540,730,940],
+  50:[280,410,560,760,980],55:[280,420,570,780,980],60:[300,430,580,790,1020],
+  65:[300,450,600,830,1060],70:[300,460,620,870,1090],75:[300,480,640,900,1120],
+  80:[300,490,680,940,1130],90:[330,500,700,990,1150],100:[350,500,700,990,1220],
+  110:[390,580,750,1000,1320],120:[410,580,800,1000,1420],130:[420,590,820,1020,1520],
+  140:[460,630,880,1150,1620],150:[480,680,940,1220,1720],160:[480,700,960,1290,1820]
+};
+
+// Correspondance type d'élément → grille
+function getGrille(elemIdx){
+  // Capot=0, Montant G=5, Hayon=6, Montant D=11, Pavillon=12, Casquette=13 → CPH
+  // Reste → Ailes-Portes
+  const cph=[0,5,6,11,12,13];
+  return cph.includes(elemIdx) ? GRILLE_CPH : GRILLE_AP;
+}
+
+// Cherche le prix dans la grille pour nb impacts et diamètre
+// diameters: 0=D1, 1=D2, 2=D3, 3=D4, 4=D5
+function getPrixGrille(grille, nb, dCol){
+  if(nb<=0)return 0;
+  const keys=Object.keys(grille).map(Number).sort((a,b)=>a-b);
+  // Trouver la ligne la plus proche (<=nb)
+  let row=keys[0];
+  for(const k of keys){ if(k<=nb)row=k; else break; }
+  return grille[row][dCol]||0;
+}
+
+// ─── HELPERS ────────────────────────────────────
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const gv=(id,def=0)=>parseFloat(($(id)||{value:def}).value)||def;
+function tva(){return gv('t-tva',20)/100;}
+function aluMaj(){return 1+gv('t-alu',20)/100;}
+function ptpMaj(){return 1-gv('t-ptp',25)/100;}  // PTP = réduction
+function forf(k){return gv('t-'+k,0);}
+
+// Calcul prix unitaire via grille grêle
+// size = 'd1'|'d2'|'d3'|'d4'|'d5'  (diamètre choisi)
+// Pour la fiche simple (petite/moyenne/grande) on mappe :
+//   petite → D2 (Ø20-25), moyenne → D3 (Ø30-35), grande → D4 (Ø40-45)
+function pu(elemIdx, alu, ptp, sizeOrCol, nb){
+  const grille=getGrille(elemIdx);
+  const colMap={petite:1,moyenne:2,grande:3,d1:0,d2:1,d3:2,d4:3,d5:4};
+  const col=colMap[sizeOrCol]??1;
+  let base=getPrixGrille(grille,nb,col);
+  if(alu)base*=aluMaj();
+  if(ptp)base*=ptpMaj();
+  return base;
+}
+
+function getPartRem(prefix){
+  const sel=$(prefix+'-part');if(!sel||!sel.value)return 0;
+  const p=partners.find(x=>x.nom===sel.value);return p?p.rem/100:0;
+}
+function getPartRem(prefix){
+  const sel=$(prefix+'-part');if(!sel||!sel.value)return 0;
+  const p=partners.find(x=>x.nom===sel.value);return p?p.rem/100:0;
+}
+
+// ─── BUILD GRILLE EDITABLES ─────────────────────
+function buildGrille(grilleObj, containerId, prefix){
+  const c=$(containerId);if(!c)return;
+  const keys=Object.keys(grilleObj).map(Number).sort((a,b)=>a-b);
+  const cols=['D1','D2','D3','D4','D5'];
+  let html='<table class="grille-table"><thead><tr><th>Nb</th>';
+  cols.forEach(col=>html+=`<th>${col}</th>`);
+  html+='</tr></thead><tbody>';
+  keys.forEach(nb=>{
+    html+=`<tr><td class="nb-col">${nb}</td>`;
+    grilleObj[nb].forEach((val,ci)=>{
+      html+=`<td><input class="gc" type="number" id="${prefix}_${nb}_${ci}" value="${val}" inputmode="decimal" oninput="updateGrille('${prefix}',${nb},${ci},this.value)"></td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  c.innerHTML=html;
+}
+
+function updateGrille(prefix, nb, col, val){
+  const g=prefix==='cph'?GRILLE_CPH:GRILLE_AP;
+  if(g[nb])g[nb][col]=parseFloat(val)||0;
+  updateAll();
+}
+
+// ─── INIT ────────────────────────────────────────
+function init(){
+  buildFicheCards();
+  buildDemCards();
+  buildPartsEdit();
+  buildGrille(GRILLE_CPH,'grille-cph-edit','cph');
+  buildGrille(GRILLE_AP,'grille-ap-edit','ap');
+  refreshPartSelects();
+  $('f-date').valueAsDate=new Date();
+  $('dv-date').valueAsDate=new Date();
+  updateAll();
+}
+
+// ─── BUILD DEG ──────────────────────────────────
+function buildDeg(){
+  const c=$('deg-list');c.innerHTML='';
+  DEG_PAL.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='field';
+    d.innerHTML=`<label>${p.l} bosses (%)</label><input type="number" id="${p.k}" value="${p.d}" inputmode="decimal" oninput="updateAll()">`;
+    c.appendChild(d);
+  });
+}
+
+// ─── BUILD FICHE CARDS ──────────────────────────
+// Labels diamètres selon type d'élément
+function getDiamLabels(i){
+  const cph=[0,5,6,11,12,13];
+  return cph.includes(i)
+    ? ['Ø10','Ø20','Ø30','Ø40','Ø>50']
+    : ['Ø15','Ø25','Ø35','Ø45','Ø>45'];
+}
+
+const overrideState={};  // prix manuel par élément (null = auto)
+
+function buildFicheCards(){
+  const c=$('fiche-cards');c.innerHTML='';
+  ELEMENTS.forEach((el,i)=>{
+    aluState['f'+i]=false;
+    ptpState[i]=false;
+    overrideState[i]=null;
+    const lbls=getDiamLabels(i);
+    const d=document.createElement('div');d.className='el-card';
+    d.innerHTML=`
+      <div class="el-head">
+        <span class="el-name">${el}</span>
+        <span class="el-total" id="ftot-${i}">0,00 €</span>
+      </div>
+      <div class="el-inputs" style="grid-template-columns:repeat(5,1fr);gap:5px;">
+        ${lbls.map((lbl,ci)=>`
+        <div class="el-input-wrap">
+          <label style="font-size:.6rem">${lbl}</label>
+          <input type="number" min="0" value="0" id="fc-${i}-${ci}" inputmode="numeric" oninput="updateFiche()">
+        </div>`).join('')}
+      </div>
+      <div id="override-row-${i}" style="display:none;margin-top:8px;padding:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;">
+        <div style="font-size:.68rem;color:var(--orange);margin-bottom:5px;font-family:'Syne',sans-serif;font-weight:700;">✏ PRIX MANUEL (total HT)</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" min="0" id="fov-${i}" inputmode="decimal" placeholder="Ex: 350.00"
+            style="flex:1;background:var(--inp);border:1px solid var(--orange);color:var(--orange);font-family:'DM Mono',monospace;font-size:1rem;font-weight:700;padding:8px 10px;border-radius:7px;outline:none;"
+            oninput="applyOverride(${i})">
+          <button onclick="cancelOverride(${i})" style="padding:8px 12px;border-radius:7px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;">AUTO</button>
+        </div>
+      </div>
+      <div class="el-footer" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+        <button class="alu-btn" id="alu-f${i}" onclick="toggleAlu('f',${i})"><span class="alu-dot"></span>ALU</button>
+        <button class="alu-btn ptp-btn" id="ptp-${i}" onclick="togglePTP(${i})"><span class="alu-dot" style="background:#f59e0b"></span>PUSH TO PAINT</button>
+        <button onclick="toggleOverride(${i})" id="ovr-btn-${i}"
+          style="padding:6px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-family:'Syne',sans-serif;font-size:.68rem;font-weight:700;cursor:pointer;transition:all .15s;">
+          ✏ Prix
+        </button>
+        <span style="font-size:.72rem;color:var(--text2)">Total : <span id="fnb-${i}" style="color:var(--text);font-weight:700">0</span> impacts</span>
+      </div>`;
+    c.appendChild(d);
+  });
+}
+
+function toggleOverride(i){
+  const row=$('override-row-'+i);
+  const btn=$('ovr-btn-'+i);
+  const visible=row.style.display!=='none';
+  if(visible){
+    cancelOverride(i);
+  } else {
+    row.style.display='block';
+    btn.style.borderColor='var(--orange)';
+    btn.style.color='var(--orange)';
+    btn.style.background='rgba(245,158,11,.1)';
+    const inp=$('fov-'+i);
+    // Pré-remplir avec le prix actuel
+    const cur=$('ftot-'+i).textContent.replace(/[^\d,.]/g,'').replace(',','.');
+    inp.value=cur||'';
+    inp.focus();
+  }
+}
+
+function applyOverride(i){
+  const val=parseFloat($('fov-'+i).value);
+  overrideState[i]=isNaN(val)?null:val;
+  updateFiche();
+}
+
+function cancelOverride(i){
+  overrideState[i]=null;
+  $('fov-'+i).value='';
+  $('override-row-'+i).style.display='none';
+  const btn=$('ovr-btn-'+i);
+  btn.style.borderColor='var(--border)';
+  btn.style.color='var(--text2)';
+  btn.style.background='var(--bg2)';
+  updateFiche();
+}
+
+// ─── BUILD DEM CARDS ────────────────────────────
+const demChecked=[false,false,false];
+
+function buildDemCards(){
+  const c=$('dem-cards');c.innerHTML='';
+  DEMS.forEach((d,i)=>{
+    demChecked[i]=false;
+    const div=document.createElement('div');
+    div.className='dem-card';
+    div.id='dem-card-'+i;
+    div.style.cursor='pointer';
+    div.onclick=()=>toggleDem(i);
+    div.innerHTML=`
+      <div class="dem-left">
+        <div class="dem-name">${d.label}</div>
+        <div class="dem-prix" id="demprix-${i}" style="color:var(--text3)">Forfait : ${fmt(forf(d.key))}</div>
+      </div>
+      <div class="dem-right">
+        <div id="dem-check-${i}" style="width:28px;height:28px;border-radius:8px;border:2px solid var(--border);background:var(--inp);display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .15s;flex-shrink:0;"></div>
+        <div class="dem-total" id="demtot-${i}" style="color:var(--text3)">0,00 €</div>
+      </div>`;
+    c.appendChild(div);
+  });
+}
+
+function toggleDem(i){
+  demChecked[i]=!demChecked[i];
+  const card=$('dem-card-'+i);
+  const check=$('dem-check-'+i);
+  const tot=$('demtot-'+i);
+  if(demChecked[i]){
+    check.textContent='✓';
+    check.style.background='var(--green)';
+    check.style.borderColor='var(--green)';
+    check.style.color='#fff';
+    card.style.background='rgba(34,197,94,.06)';
+    card.style.borderColor='rgba(34,197,94,.3)';
+    tot.style.color='var(--green)';
+    $('demprix-'+i).style.color='var(--text2)';
+  } else {
+    check.textContent='';
+    check.style.background='var(--inp)';
+    check.style.borderColor='var(--border)';
+    card.style.background='';
+    card.style.borderColor='';
+    tot.style.color='var(--text3)';
+    $('demprix-'+i).style.color='var(--text3)';
+  }
+  updateFiche();
+}
+
+// ─── BUILD GRELE CARDS ──────────────────────────
+function buildGreleCards(){
+  const c=$('grele-cards');c.innerHTML='';
+  ELEMENTS.forEach((el,i)=>{
+    aluState['g'+i]=false;
+    const d=document.createElement('div');d.className='el-card';
+    d.innerHTML=`
+      <div class="el-head">
+        <span class="el-name">${el}</span>
+        <span class="el-total" id="gtot-${i}">0,00 €</span>
+      </div>
+      <div class="el-inputs">
+        <div class="el-input-wrap"><label>≤3cm</label><input type="number" min="0" value="0" id="gp-${i}" inputmode="numeric" oninput="updateGrele()"></div>
+        <div class="el-input-wrap"><label>3–7cm</label><input type="number" min="0" value="0" id="gm-${i}" inputmode="numeric" oninput="updateGrele()"></div>
+        <div class="el-input-wrap"><label>>7cm</label><input type="number" min="0" value="0" id="gg-${i}" inputmode="numeric" oninput="updateGrele()"></div>
+      </div>
+      <div class="el-footer">
+        <button class="alu-btn" id="alu-g${i}" onclick="toggleAlu('g',${i})"><span class="alu-dot"></span>ALUMINIUM</button>
+        <div><span class="pu-label">Total : </span><span class="pu-val" id="gsum-${i}">0</span></div>
+      </div>`;
+    c.appendChild(d);
+  });
+}
+
+// ─── TOGGLE ALU ─────────────────────────────────
+function toggleAlu(prefix,i){
+  const k=prefix+i;
+  aluState[k]=!aluState[k];
+  const btn=$('alu-'+k);
+  btn.classList.toggle('on',aluState[k]);
+  if(prefix==='f')updateFiche();else updateGrele();
+}
+
+// ─── TOGGLE PTP ─────────────────────────────────
+function togglePTP(i){
+  ptpState[i]=!ptpState[i];
+  const btn=$('ptp-'+i);
+  btn.classList.toggle('on', ptpState[i]);
+  updateFiche();
+}
+
+// ─── QTY ADJUST (plus utilisé) ──────────────────
+const demQty=[1,1,1]; // conservé pour compatibilité PDF
+
+// ─── UPDATE FICHE ───────────────────────────────
+function updateFiche(){
+  let tot=0;
+  const colTotals=[0,0,0,0,0];
+  let grandTotal=0;
+
+  ELEMENTS.forEach((_,i)=>{
+    const alu=aluState['f'+i];
+    const ptp=ptpState[i];
+    const grille=getGrille(i);
+    let elTotal=0;
+    let nbTot=0;
+    for(let ci=0;ci<5;ci++){
+      const nb=gv(`fc-${i}-${ci}`);
+      if(!nb)continue;
+      nbTot+=nb;
+      colTotals[ci]+=nb;
+      grandTotal+=nb;
+      const px=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);
+      elTotal+=nb*px;
+    }
+    if(overrideState[i]!==null && overrideState[i]!==undefined){
+      elTotal=overrideState[i];
+      $('ftot-'+i).textContent='✏ '+fmt(elTotal);
+      $('ftot-'+i).style.color='var(--orange)';
+    } else {
+      $('ftot-'+i).textContent=fmt(elTotal);
+      $('ftot-'+i).style.color='var(--green)';
+    }
+    $('fnb-'+i).textContent=nbTot;
+    tot+=elTotal;
+  });
+
+  DEMS.forEach((d,i)=>{
+    const p=forf(d.key);
+    const t=demChecked[i]?p:0;
+    $('demprix-'+i).textContent='Forfait : '+fmt(p);
+    $('demtot-'+i).textContent=fmt(t);
+    tot+=t;
+  });
+
+  // Mettre à jour le bloc total bosses (toujours visible)
+  const colLabels=['Ø10-15','Ø20-25','Ø30-35','Ø40-45','Ø>45'];
+  const cols=$('total-bosses-cols');
+  if(cols){
+    cols.innerHTML=colTotals.map((n,ci)=>`
+      <div style="text-align:center;background:var(--bg3);border-radius:7px;padding:8px 4px;">
+        <div style="font-size:.58rem;color:var(--text3);font-family:'Syne',sans-serif;font-weight:700;margin-bottom:3px;">${colLabels[ci]}</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:${n>0?'var(--text)':'var(--text3)'};">${n}</div>
+      </div>`).join('');
+  }
+  const grand=$('total-bosses-grand');
+  if(grand) grand.textContent=grandTotal;
+
+  renderRecap('recap-fiche',tot,getPartRem('f'));
+  syncDevisFromFiche();
+}
+
+// ─── CLIENT TYPE ─────────────────────────────────
+let clientType='particulier';
+
+function setClientType(type){
+  clientType=type;
+  $('type-part').classList.toggle('on', type==='particulier');
+  $('type-pro').classList.toggle('on', type==='professionnel');
+  // Champs pro
+  $('c-societe-field').style.display=type==='professionnel'?'flex':'none';
+  $('c-siret-field').style.display=type==='professionnel'?'flex':'none';
+  // Label nom
+  $('c-nom-label').textContent=type==='professionnel'?'Nom du contact':'Nom / Prénom';
+  syncClientToDevis();
+}
+
+// ─── SYNC CLIENT → DEVIS ────────────────────────
+function syncClientToDevis(){
+  const nom=$('c-nom').value;
+  const societe=$('c-societe')?.value||'';
+  const clientDisplay=clientType==='professionnel'&&societe ? societe+(nom?' — '+nom:'') : nom;
+  const d=$('dc-nom');if(d)d.value=clientDisplay;
+  const map=[['c-tel','dc-tel'],['c-adresse','dc-adresse'],['c-email','dc-email'],['c-police','dc-police']];
+  map.forEach(([src,dst])=>{const s=$(src),d=$(dst);if(s&&d&&s.value)d.value=s.value;});
+  // SIRET → champ société devis si présent
+  if($('c-siret')&&$('ds-siret'))$('ds-siret').value=$('c-siret').value||'';
+  if($('c-societe')&&$('ds-nom'))$('ds-nom').value=$('c-societe').value||'';
+}
+function syncDevisFromFiche(){
+  syncClientToDevis();
+  // Sync infos véhicule → devis
+  const modele=$('f-modele').value;
+  const immat=$('f-immat').value;
+  const date=$('f-date').value;
+  if(modele)$('dv-modele').value=modele;
+  if(immat)$('dv-immat').value=immat;
+  if(date)$('dv-date').value=date;
+
+  // Sync partenaire
+  const partVal=$('f-part').value;
+  if(partVal){
+    $('d-part').value=partVal;
+    partChange('d');
+  }
+
+  // Reconstruire les lignes devis depuis la fiche
+  const c=$('devis-lines');
+  c.innerHTML='';
+  let idx=0;
+
+  ELEMENTS.forEach((el,i)=>{
+    const lbls=getDiamLabels(i);
+    const alu=aluState['f'+i];
+    const ptp=ptpState[i];
+    const grille=getGrille(i);
+    const tags=[];
+    if(alu)tags.push('ALU');
+    if(ptp)tags.push('PTP');
+    const tagTxt=tags.length?' ('+tags.join('+')+')':'';
+    let nbTot=0;
+    for(let ci=0;ci<5;ci++) nbTot+=gv(`fc-${i}-${ci}`);
+    if(!nbTot)return;
+
+    // Si override : une seule ligne avec le prix manuel
+    if(overrideState[i]!==null && overrideState[i]!==undefined){
+      const lbl=`${el}${tagTxt} — ${nbTot} impact${nbTot>1?'s':''} (prix modifié)`;
+      addDevisLineData(idx,lbl,1,overrideState[i],0);
+      idx++;
+      return;
+    }
+
+    // Une ligne par colonne non-vide
+    let addedAny=false;
+    for(let ci=0;ci<5;ci++){
+      const nb=gv(`fc-${i}-${ci}`);
+      if(!nb)continue;
+      const px=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);
+      const lbl=`${el}${tagTxt} — ${nb} impact${nb>1?'s':''} ${lbls[ci]}`;
+      addDevisLineData(idx,lbl,nb,px,0);
+      idx++;
+      addedAny=true;
+    }
+  });
+
+  DEMS.forEach((d,i)=>{
+    if(!demChecked[i])return;
+    addDevisLineData(idx,d.label,1,forf(d.key),0);
+    idx++;
+  });
+
+  // Si aucune ligne, mettre une ligne vide
+  if(idx===0)addDevisLineData(0,'',1,0,0);
+
+  updateDevis();
+}
+
+function addDevisLineData(i,lbl,qty,prix,rem){
+  const c=$('devis-lines');
+  const d=document.createElement('div');
+  d.className='devis-line';d.id='dl-card-'+i;
+  d.innerHTML=`
+    <div class="devis-line-head">
+      <div class="field" style="flex:1"><label>Désignation</label>
+        <input type="text" id="dl-lbl-${i}" value="${lbl}" oninput="updateDevis()"></div>
+      <button class="devis-del" onclick="removeDevisLine(${i})">×</button>
+    </div>
+    <div class="devis-line-body">
+      <div class="field"><label>Qté</label><input type="number" min="1" value="${qty}" id="dl-qty-${i}" inputmode="numeric" oninput="updateDevis()"></div>
+      <div class="field"><label>Prix U. HT (€)</label><input type="number" min="0" value="${prix.toFixed(2)}" id="dl-px-${i}" inputmode="decimal" oninput="updateDevis()"></div>
+      <div class="field"><label>Remise (%)</label><input type="number" min="0" max="100" value="${rem}" id="dl-rem-${i}" inputmode="decimal" oninput="updateDevis()"></div>
+    </div>
+    <div class="devis-total-line">Total : <span id="dl-tot-${i}" style="margin-left:6px">${fmt(qty*prix*(1-rem/100))}</span></div>`;
+  c.appendChild(d);
+}
+
+// ─── UPDATE GRELE ───────────────────────────────
+function updateGrele(){
+  let tot=0,sp=0,sm=0,sg=0;
+  ELEMENTS.forEach((_,i)=>{
+    const p=gv('gp-'+i),m=gv('gm-'+i),g=gv('gg-'+i),nb=p+m+g;
+    sp+=p;sm+=m;sg+=g;
+    let price=0;
+    if(nb){
+      // Grêle : on utilise le diamètre selon taille : petite=d2, moyenne=d3, grande=d4
+      const sz=g?'d4':m?'d3':'d2';
+      price=pu(i,aluState['g'+i],false,sz,nb);
+    }
+    const t=nb*price;
+    $('gsum-'+i).textContent=nb;
+    $('gtot-'+i).textContent=fmt(t);
+    tot+=t;
+  });
+  $('s-p').textContent=sp;$('s-m').textContent=sm;$('s-g').textContent=sg;$('s-t').textContent=sp+sm+sg;
+  renderRecap('recap-grele',tot,0);
+}
+
+// ─── DEVIS LINES ────────────────────────────────
+function addDevisLine(){
+  const nb=document.querySelectorAll('[id^="dl-card-"]').length;
+  addDevisLineData(nb,'',1,0,0);
+  updateDevis();
+}
+
+function removeDevisLine(i){
+  const el=$('dl-card-'+i);
+  if(el){el.style.opacity='0';el.style.transform='translateX(20px)';el.style.transition='all .2s';setTimeout(()=>{el.remove();updateDevis();},200);}
+}
+
+function updateDevis(){
+  let tot=0;
+  document.querySelectorAll('[id^="dl-card-"]').forEach(card=>{
+    const i=card.id.split('-').pop();
+    const q=gv('dl-qty-'+i,1),p=gv('dl-px-'+i,0),r=gv('dl-rem-'+i,0);
+    const t=q*p*(1-r/100);
+    const el=$('dl-tot-'+i);if(el)el.textContent=fmt(t);
+    tot+=t;
+  });
+  renderRecap('recap-devis',tot,getPartRem('d'));
+}
+
+// ─── RENDER RECAP ───────────────────────────────
+function renderRecap(id,totalHT,remPct){
+  const rem=totalHT*remPct,net=totalHT-rem,tv=net*tva(),ttc=net+tv;
+  const c=$(id);
+  c.innerHTML=`
+    <div class="recap-row"><span class="lbl">Sous-total HT</span><span class="val">${fmt(totalHT)}</span></div>
+    ${remPct>0?`<div class="recap-row remise"><span class="lbl">Remise partenaire (−${Math.round(remPct*100)}%)</span><span class="val">−${fmt(rem)}</span></div>
+    <div class="recap-row"><span class="lbl">Net HT</span><span class="val">${fmt(net)}</span></div>`:''}
+    <div class="recap-row"><span class="lbl">TVA (${Math.round(tva()*100)}%)</span><span class="val">${fmt(tv)}</span></div>
+    <div class="recap-row ttc"><span class="lbl">TOTAL TTC</span><span class="val">${fmt(ttc)}</span></div>`;
+}
+
+// ─── PARTNERS ───────────────────────────────────
+function buildPartsEdit(){
+  const c=$('parts-edit');c.innerHTML='';
+  partners.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='part-edit';
+    d.innerHTML=`
+      <div class="part-edit-row">
+        <div>
+          <div class="g2" style="gap:8px;margin-bottom:8px">
+            <div class="field"><label>Nom</label><input type="text" value="${p.nom}" oninput="partners[${i}].nom=this.value;refreshPartSelects()"></div>
+            <div class="field"><label>Remise %</label><input type="number" value="${p.rem}" min="0" max="50" inputmode="decimal" oninput="partners[${i}].rem=+this.value;updateAll()"></div>
+          </div>
+          <div class="field"><label>Type</label><select onchange="partners[${i}].type=this.value">
+            ${['Garage','Assurance','Expert','Carrossier','Concessionnaire','Autre'].map(t=>`<option ${t===p.type?'selected':''}>${t}</option>`).join('')}
+          </select></div>
+        </div>
+        <button class="part-del" onclick="removePart(${i})">×</button>
+      </div>`;
+    c.appendChild(d);
+  });
+}
+
+function addPart(){partners.push({nom:'Nouveau partenaire',type:'Garage',rem:10});buildPartsEdit();refreshPartSelects();}
+function removePart(i){partners.splice(i,1);buildPartsEdit();refreshPartSelects();}
+
+function refreshPartSelects(){
+  ['f-part','d-part'].forEach(id=>{
+    const sel=$(id);if(!sel)return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— Aucun —</option>'+partners.map(p=>`<option value="${p.nom}" ${p.nom===cur?'selected':''}>${p.nom} (−${p.rem}%)</option>`).join('');
+  });
+  updateAll();
+}
+
+function partChange(prefix){
+  const v=$(prefix+'-part').value;
+  const badge=$(prefix+'-pbadge');
+  if(v){const p=partners.find(x=>x.nom===v);badge.textContent='−'+(p?.rem||0)+'%';badge.style.display='inline-flex';}
+  else badge.style.display='none';
+  updateAll();
+}
+
+// ─── UPDATE ALL ─────────────────────────────────
+function updateAll(){updateFiche();updateDevis();}
+
+// ─── TABS ───────────────────────────────────────
+const tabLabels={fiche:'Fiche DSP',devis:'Devis / Facture',tarifs:'Tarifs'};
+function goTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b=>{b.classList.remove('active');b.querySelector('.ico-bar').style.display='none';});
+  $('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+  btn.querySelector('.ico-bar').style.display='block';
+  $('hdr-label').textContent=tabLabels[name];
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─── RESET ──────────────────────────────────────
+function resetPanel(p){
+  // Pas de confirm() — bloqué sur mobile ; on utilise un dialog custom
+  showConfirm('Réinitialiser ce formulaire ?', ()=>{
+    if(p==='fiche'){
+      // Réinitialiser tous les inputs de la fiche
+      ELEMENTS.forEach((_,i)=>{
+        for(let ci=0;ci<5;ci++){const el=$(`fc-${i}-${ci}`);if(el)el.value=0;}
+        aluState['f'+i]=false;
+        ptpState[i]=false;
+        overrideState[i]=null;
+        const ab=$('alu-f'+i);if(ab)ab.classList.remove('on');
+        const pb=$('ptp-'+i);if(pb){pb.classList.remove('on');}
+        const ovRow=$('override-row-'+i);if(ovRow)ovRow.style.display='none';
+        const ovBtn=$('ovr-btn-'+i);if(ovBtn){ovBtn.style.borderColor='var(--border)';ovBtn.style.color='var(--text2)';ovBtn.style.background='var(--bg2)';}
+        const card=pb?.closest('.el-card');if(card){card.style.borderColor='';card.style.background='';}
+      });
+      demChecked[0]=demChecked[1]=demChecked[2]=false;
+      buildDemCards();
+      ['c-nom','c-tel','c-adresse','c-email','c-police','c-societe','c-siret'].forEach(id=>{const el=$(id);if(el)el.value='';});
+      setClientType('particulier');;
+      $('f-tech').value='';$('f-dossier').value='';
+      $('f-part').value='';partChange('f');
+      updateFiche();
+    }
+    if(p==='devis'){
+      $('ds-nom').value='';$('ds-siret').value='';$('ds-tel').value='';
+      $('ds-adresse').value='';$('ds-email').value='';
+      $('dc-nom').value='';$('dc-police').value='';$('dc-adresse').value='';
+      $('dc-tel').value='';$('dc-num').value='';
+      $('devis-lines').innerHTML='';
+      syncDevisFromFiche();
+    }
+    if(p==='grele'){
+      ELEMENTS.forEach((_,i)=>{
+        const gp=$('gp-'+i),gm=$('gm-'+i),gg=$('gg-'+i);
+        if(gp)gp.value=0;if(gm)gm.value=0;if(gg)gg.value=0;
+        aluState['g'+i]=false;
+        const ab=$('alu-g'+i);if(ab)ab.classList.remove('on');
+      });
+      $('g-sinistre').value='';$('g-assurance').value='';
+      $('g-expert').value='';$('g-vehicule').value='';$('g-immat').value='';
+      updateGrele();
+    }
+  });
+}
+
+// ─── CUSTOM CONFIRM (fonctionne sur mobile) ──────
+function showConfirm(msg, onOk){
+  // Créer overlay
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML=`
+    <div style="background:#1a1e28;border:1px solid #2a2f3d;border-radius:14px;padding:24px;max-width:320px;width:100%;text-align:center;">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:8px;color:#e2e8f0;">Confirmer</div>
+      <div style="font-size:.85rem;color:#94a3b8;margin-bottom:20px;">${msg}</div>
+      <div style="display:flex;gap:10px;">
+        <button id="conf-no" style="flex:1;padding:12px;border-radius:9px;border:1px solid #2a2f3d;background:#13161e;color:#94a3b8;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">Annuler</button>
+        <button id="conf-yes" style="flex:1;padding:12px;border-radius:9px;border:none;background:#ef4444;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">Réinitialiser</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  $('conf-no').onclick=()=>ov.remove();
+  $('conf-yes').onclick=()=>{ov.remove();onOk();};
+}
+
+// ─── TOAST NOTIFICATION ──────────────────────────
+function showToast(msg, color='var(--green)'){
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:calc(var(--nav-h)+16px);left:50%;transform:translateX(-50%);background:#1a1e28;border:1px solid ${color};color:${color};padding:10px 20px;border-radius:20px;font-size:.82rem;font-family:'Syne',sans-serif;font-weight:700;z-index:9998;white-space:nowrap;`;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400);},2200);
+}
+
+// ─── PDF / IMPRESSION ────────────────────────────
+function exportPDF(type){
+  try{
+    // Collecter les données
+    const date=new Date().toLocaleDateString('fr-FR');
+    const titles={fiche:"FICHE D'INTERVENTION",devis:'DEVIS / FACTURE'};
+
+    let html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<title>DSP Pro — ${titles[type]}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;font-size:11px;color:#111;background:#fff;padding:14mm;}
+h1{font-size:18px;font-weight:900;letter-spacing:-.02em;margin-bottom:2px;}
+.sub{font-size:10px;color:#666;margin-bottom:14px;}
+.badge{display:inline-block;background:#1e4fb0;color:#fff;padding:2px 10px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;margin-bottom:10px;}
+table{width:100%;border-collapse:collapse;margin-bottom:10px;}
+th{background:#1e2030;color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;}
+td{padding:5px 8px;border-bottom:1px solid #e5e7eb;font-size:10px;}
+tr:nth-child(even) td{background:#f8f9fa;}
+.section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#1e4fb0;margin:12px 0 4px;border-bottom:1px solid #e5e7eb;padding-bottom:3px;}
+.recap-table td{border:none!important;background:none!important;padding:4px 8px;}
+.recap-table tr:last-child td{background:#1e4fb0!important;color:#fff!important;font-weight:700;font-size:12px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+.info-block{background:#f8f9fa;border:1px solid #e5e7eb;border-radius:4px;padding:8px;}
+.info-block label{font-size:8px;color:#888;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:1px;}
+.info-block span{font-size:11px;font-weight:600;}
+.total-bosses{background:#f0f4ff;border:1px solid #c7d2fe;border-radius:6px;padding:10px;margin-bottom:10px;}
+.total-bosses .grand{font-size:22px;font-weight:900;color:#1e4fb0;text-align:center;}
+.total-bosses .sub-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:6px;}
+.total-bosses .col{text-align:center;background:#fff;border-radius:4px;padding:4px 2px;}
+.total-bosses .col .lbl{font-size:8px;color:#888;}
+.total-bosses .col .val{font-size:13px;font-weight:700;}
+.ptp-tag{background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;}
+.alu-tag{background:#dbeafe;color:#1e40af;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:700;}
+.footer{margin-top:16px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:8px;color:#aaa;display:flex;justify-content:space-between;}
+@media print{body{padding:0;}@page{margin:14mm;}}
+</style></head><body>`;
+
+    // HEADER
+    html+=`<div class="badge">DSP PRO</div>
+<h1>${titles[type]}</h1>
+<div class="sub">Généré le ${date}</div>`;
+
+    if(type==='fiche'){
+      // INFOS CLIENT
+      const nom=$('c-nom').value;
+      const societe=$('c-societe')?.value||'';
+      const clientNom=clientType==='professionnel'&&societe?societe+(nom?' — '+nom:''):nom;
+      html+=`<div class="section-title">Client</div>
+<div class="grid2">
+  <div class="info-block"><label>Nom</label><span>${clientNom||'—'}</span></div>
+  <div class="info-block"><label>Téléphone</label><span>${$('c-tel').value||'—'}</span></div>
+  <div class="info-block" style="grid-column:span 2"><label>Adresse</label><span>${$('c-adresse').value||'—'}</span></div>
+  <div class="info-block"><label>Email</label><span>${$('c-email').value||'—'}</span></div>
+  <div class="info-block"><label>N° Police</label><span>${$('c-police').value||'—'}</span></div>
+</div>`;
+
+      // INFOS VÉHICULE
+      html+=`<div class="section-title">Véhicule</div>
+<div class="grid2">
+  <div class="info-block"><label>Modèle</label><span>${$('f-modele').value||'—'}</span></div>
+  <div class="info-block"><label>Immatriculation</label><span>${$('f-immat').value||'—'}</span></div>
+  <div class="info-block"><label>Date</label><span>${$('f-date').value||'—'}</span></div>
+  <div class="info-block"><label>Technicien</label><span>${$('f-tech').value||'—'}</span></div>
+  <div class="info-block"><label>N° Dossier</label><span>${$('f-dossier').value||'—'}</span></div>
+</div>`;
+
+      // TOTAL BOSSES
+      const colLabels=['Ø10-15','Ø20-25','Ø30-35','Ø40-45','Ø>45'];
+      const colTotals=[0,0,0,0,0];let grandTotal=0;
+      ELEMENTS.forEach((_,i)=>{for(let ci=0;ci<5;ci++){const n=gv(`fc-${i}-${ci}`);colTotals[ci]+=n;grandTotal+=n;}});
+      html+=`<div class="total-bosses">
+<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#1e4fb0;margin-bottom:4px;">Total des bosses</div>
+<div class="grand">${grandTotal} impacts</div>
+<div class="sub-grid">${colTotals.map((n,ci)=>`<div class="col"><div class="lbl">${colLabels[ci]}</div><div class="val" style="color:${n>0?'#1e4fb0':'#ccc'}">${n}</div></div>`).join('')}</div>
+</div>`;
+
+      // TABLEAU ÉLÉMENTS
+      html+=`<div class="section-title">Éléments</div>
+<table><thead><tr><th>Élément</th><th>Ø</th><th>Impacts</th><th>Options</th><th style="text-align:right">Total HT</th></tr></thead><tbody>`;
+      let hasRows=false;
+      ELEMENTS.forEach((_,i)=>{
+        const lbls=getDiamLabels(i);
+        const alu=aluState['f'+i];const ptp=ptpState[i];
+        const grille=getGrille(i);
+        for(let ci=0;ci<5;ci++){
+          const nb=gv(`fc-${i}-${ci}`);if(!nb)continue;
+          hasRows=true;
+          const px=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);
+          const tot=overrideState[i]!==null&&overrideState[i]!==undefined?overrideState[i]:nb*px;
+          const tags=(alu?'<span class="alu-tag">ALU</span>':'')+(ptp?'<span class="ptp-tag">PTP</span>':'');
+          html+=`<tr><td>${ELEMENTS[i]}</td><td>${lbls[ci]}</td><td style="text-align:center">${nb}</td><td>${tags||'—'}</td><td style="text-align:right;font-weight:600">${fmt(tot)}</td></tr>`;
+        }
+      });
+      if(!hasRows)html+=`<tr><td colspan="5" style="text-align:center;color:#aaa;padding:12px">Aucun impact saisi</td></tr>`;
+      html+=`</tbody></table>`;
+
+      // DÉMONTAGES
+      const demRows=DEMS.filter((_,i)=>demChecked[i]);
+      if(demRows.length){
+        html+=`<div class="section-title">Démontages</div><table><thead><tr><th>Désignation</th><th style="text-align:right">Prix HT</th></tr></thead><tbody>`;
+        demRows.forEach((d,i)=>{
+          const idx=DEMS.indexOf(d);
+          html+=`<tr><td>${d.label}</td><td style="text-align:right;font-weight:600">${fmt(forf(d.key))}</td></tr>`;
+        });
+        html+=`</tbody></table>`;
+      }
+    }
+
+    if(type==='devis'){
+      // INFOS SOCIÉTÉ + CLIENT
+      html+=`<div class="grid2">
+<div><div class="section-title">Société</div>
+<div class="info-block">
+  <label>Nom société</label><span>${$('ds-nom').value||'—'}</span><br>
+  <label style="margin-top:4px">SIRET</label><span>${$('ds-siret').value||'—'}</span><br>
+  <label style="margin-top:4px">Adresse</label><span>${$('ds-adresse').value||'—'}</span><br>
+  <label style="margin-top:4px">Tél</label><span>${$('ds-tel').value||'—'}</span>
+</div></div>
+<div><div class="section-title">Client</div>
+<div class="info-block">
+  <label>Nom</label><span>${$('dc-nom').value||'—'}</span><br>
+  <label style="margin-top:4px">Adresse</label><span>${$('dc-adresse').value||'—'}</span><br>
+  <label style="margin-top:4px">Tél</label><span>${$('dc-tel').value||'—'}</span><br>
+  <label style="margin-top:4px">N° Police</label><span>${$('dc-police').value||'—'}</span>
+</div></div></div>`;
+
+      html+=`<div class="grid2" style="margin-bottom:10px;">
+<div class="info-block"><label>Véhicule</label><span>${$('dv-modele').value||'—'} ${$('dv-immat').value||''}</span></div>
+<div class="info-block"><label>N° Devis</label><span>${$('dc-num').value||'—'}</span></div>
+</div>`;
+
+      // PRESTATIONS
+      html+=`<div class="section-title">Prestations</div>
+<table><thead><tr><th>Désignation</th><th style="text-align:center">Qté</th><th style="text-align:right">Prix U. HT</th><th style="text-align:right">Remise</th><th style="text-align:right">Total HT</th></tr></thead><tbody>`;
+      let hasRows=false;
+      document.querySelectorAll('[id^="dl-card-"]').forEach(card=>{
+        const i=card.id.replace('dl-card-','');
+        const lbl=$('dl-lbl-'+i)?.value||'';if(!lbl)return;
+        hasRows=true;
+        const q=gv('dl-qty-'+i,1),p=gv('dl-px-'+i,0),r=gv('dl-rem-'+i,0);
+        html+=`<tr><td>${lbl}</td><td style="text-align:center">${q}</td><td style="text-align:right">${fmt(p)}</td><td style="text-align:right">${r?r+'%':'—'}</td><td style="text-align:right;font-weight:600">${fmt(q*p*(1-r/100))}</td></tr>`;
+      });
+      if(!hasRows)html+=`<tr><td colspan="5" style="text-align:center;color:#aaa;padding:12px">Aucune prestation</td></tr>`;
+      html+=`</tbody></table>`;
+    }
+
+    // RÉCAP FINANCIER (commun)
+    let totalHT=0;
+    if(type==='fiche'){
+      ELEMENTS.forEach((_,i)=>{
+        const alu=aluState['f'+i];const ptp=ptpState[i];const grille=getGrille(i);
+        let elTotal=0;
+        for(let ci=0;ci<5;ci++){const nb=gv(`fc-${i}-${ci}`);if(nb){const px=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);elTotal+=nb*px;}}
+        totalHT+=overrideState[i]!==null&&overrideState[i]!==undefined?overrideState[i]:elTotal;
+      });
+      DEMS.forEach((d,i)=>{if(demChecked[i])totalHT+=forf(d.key);});
+    } else {
+      document.querySelectorAll('[id^="dl-card-"]').forEach(card=>{
+        const i=card.id.replace('dl-card-','');
+        totalHT+=gv('dl-qty-'+i,1)*gv('dl-px-'+i,0)*(1-gv('dl-rem-'+i,0)/100);
+      });
+    }
+    const remPct=(type==='fiche')?getPartRem('f'):getPartRem('d');
+    const rem=totalHT*remPct,net=totalHT-rem,tv=net*tva(),ttc=net+tv;
+
+    html+=`<table class="recap-table" style="margin-top:8px;width:260px;margin-left:auto;">
+<tbody>
+<tr><td>Sous-total HT</td><td style="text-align:right;font-weight:600">${fmt(totalHT)}</td></tr>`;
+    if(remPct>0)html+=`<tr><td>Remise partenaire (−${Math.round(remPct*100)}%)</td><td style="text-align:right;color:#dc2626">−${fmt(rem)}</td></tr>
+<tr><td>Net HT</td><td style="text-align:right;font-weight:600">${fmt(net)}</td></tr>`;
+    html+=`<tr><td>TVA (${Math.round(tva()*100)}%)</td><td style="text-align:right">${fmt(tv)}</td></tr>
+<tr><td>TOTAL TTC</td><td style="text-align:right">${fmt(ttc)}</td></tr>
+</tbody></table>`;
+
+    // FOOTER
+    html+=`<div class="footer"><span>DSP Pro</span><span>${date}</span></div>
+<script>window.onload=()=>{window.print();}<\/script>
+</body></html>`;
+
+    // Ouvrir dans nouvel onglet et imprimer
+    const win=window.open('','_blank');
+    if(win){
+      win.document.write(html);
+      win.document.close();
+      showToast('✓ Document ouvert — utilise Imprimer → PDF');
+    } else {
+      // Fallback : télécharger en HTML
+      const blob=new Blob([html],{type:'text/html'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=(type==='fiche'?'Fiche_DSP':'Devis')+'_'+new Date().toISOString().slice(0,10)+'.html';
+      a.click();
+      showToast('✓ Fichier téléchargé');
+    }
+  } catch(err){
+    console.error('Export error:',err);
+    showToast('⚠ Erreur : '+err.message,'var(--red)');
+  }
+}
+
+init();
+
+// ─── PWA SERVICE WORKER ──────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(()=>{
+    console.log('SW enregistré');
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>
