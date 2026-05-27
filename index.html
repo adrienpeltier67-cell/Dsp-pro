@@ -423,6 +423,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
       <div class="sec-title">Partenaires Pro</div>
       <div id="parts-edit"></div>
       <button class="add-btn" onclick="addPart()">+ Ajouter un partenaire</button>
+      <button class="btn btn-pdf" style="width:100%;margin-top:10px;" onclick="saveGrilles()">💾 Sauvegarder tous les tarifs</button>
     </div>
   </div>
 
@@ -566,11 +567,50 @@ function buildGrille(grilleObj, containerId, prefix){
 function updateGrille(prefix, nb, col, val){
   const g=prefix==='cph'?GRILLE_CPH:GRILLE_AP;
   if(g[nb])g[nb][col]=parseFloat(val)||0;
+  saveGrilles();
   updateAll();
+}
+
+// ─── PERSISTANCE LOCALE ─────────────────────────
+function saveGrilles(){
+  try{
+    localStorage.setItem('dsp_cph', JSON.stringify(GRILLE_CPH));
+    localStorage.setItem('dsp_ap',  JSON.stringify(GRILLE_AP));
+    localStorage.setItem('dsp_partners', JSON.stringify(partners));
+    localStorage.setItem('dsp_tarifs', JSON.stringify({
+      alu: gv('t-alu',20), ptp: gv('t-ptp',25), tva: gv('t-tva',20),
+      ciel: gv('t-ciel',150), capot: gv('t-capot',80), hayon: gv('t-hayon',90)
+    }));
+    showToast('✓ Tarifs sauvegardés');
+  }catch(e){}
+}
+
+function loadGrilles(){
+  try{
+    const cph=localStorage.getItem('dsp_cph');
+    const ap=localStorage.getItem('dsp_ap');
+    const pts=localStorage.getItem('dsp_partners');
+    const tar=localStorage.getItem('dsp_tarifs');
+    if(cph){const d=JSON.parse(cph);Object.keys(d).forEach(k=>{if(GRILLE_CPH[k])GRILLE_CPH[k]=[...d[k]];});}
+    if(ap){const d=JSON.parse(ap);Object.keys(d).forEach(k=>{if(GRILLE_AP[k])GRILLE_AP[k]=[...d[k]];});}
+    if(pts){partners=JSON.parse(pts);}
+    if(tar){
+      const t=JSON.parse(tar);
+      setTimeout(()=>{
+        if($('t-alu'))$('t-alu').value=t.alu;
+        if($('t-ptp'))$('t-ptp').value=t.ptp;
+        if($('t-tva'))$('t-tva').value=t.tva;
+        if($('t-ciel'))$('t-ciel').value=t.ciel;
+        if($('t-capot'))$('t-capot').value=t.capot;
+        if($('t-hayon'))$('t-hayon').value=t.hayon;
+      },100);
+    }
+  }catch(e){}
 }
 
 // ─── INIT ────────────────────────────────────────
 function init(){
+  loadGrilles();
   buildFicheCards();
   buildDemCards();
   buildPartsEdit();
@@ -580,6 +620,12 @@ function init(){
   $('f-date').valueAsDate=new Date();
   $('dv-date').valueAsDate=new Date();
   updateAll();
+
+  // Auto-save quand on modifie les tarifs de base
+  ['t-alu','t-ptp','t-tva','t-ciel','t-capot','t-hayon'].forEach(id=>{
+    const el=$(id);
+    if(el) el.addEventListener('change', saveGrilles);
+  });
 }
 
 // ─── BUILD DEG ──────────────────────────────────
@@ -795,9 +841,11 @@ function updateFiche(){
       nbTot+=nb;
       colTotals[ci]+=nb;
       grandTotal+=nb;
-      const px=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);
-      elTotal+=nb*px;
+      // La grille donne le TOTAL HT pour nb impacts à ce diamètre
+      const prixTotal=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);
+      elTotal+=prixTotal;
     }
+    // Override manuel
     if(overrideState[i]!==null && overrideState[i]!==undefined){
       elTotal=overrideState[i];
       $('ftot-'+i).textContent='✏ '+fmt(elTotal);
@@ -818,7 +866,7 @@ function updateFiche(){
     tot+=t;
   });
 
-  // Mettre à jour le bloc total bosses (toujours visible)
+  // Bloc total bosses
   const colLabels=['Ø10-15','Ø20-25','Ø30-35','Ø40-45','Ø>45'];
   const cols=$('total-bosses-cols');
   if(cols){
@@ -905,14 +953,14 @@ function syncDevisFromFiche(){
       return;
     }
 
-    // Une ligne par colonne non-vide
+    // Une ligne par colonne non-vide — prix = TOTAL grille (pas unitaire)
     let addedAny=false;
     for(let ci=0;ci<5;ci++){
       const nb=gv(`fc-${i}-${ci}`);
       if(!nb)continue;
-      const px=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);
+      const prixTotal=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);
       const lbl=`${el}${tagTxt} — ${nb} impact${nb>1?'s':''} ${lbls[ci]}`;
-      addDevisLineData(idx,lbl,nb,px,0);
+      addDevisLineData(idx,lbl,1,prixTotal,0);  // qté=1, prix=total
       idx++;
       addedAny=true;
     }
@@ -1015,8 +1063,8 @@ function buildPartsEdit(){
       <div class="part-edit-row">
         <div>
           <div class="g2" style="gap:8px;margin-bottom:8px">
-            <div class="field"><label>Nom</label><input type="text" value="${p.nom}" oninput="partners[${i}].nom=this.value;refreshPartSelects()"></div>
-            <div class="field"><label>Remise %</label><input type="number" value="${p.rem}" min="0" max="50" inputmode="decimal" oninput="partners[${i}].rem=+this.value;updateAll()"></div>
+            <div class="field"><label>Nom</label><input type="text" value="${p.nom}" oninput="partners[${i}].nom=this.value;refreshPartSelects();saveGrilles()"></div>
+            <div class="field"><label>Remise %</label><input type="number" value="${p.rem}" min="0" max="50" inputmode="decimal" oninput="partners[${i}].rem=+this.value;updateAll();saveGrilles()"></div>
           </div>
           <div class="field"><label>Type</label><select onchange="partners[${i}].type=this.value">
             ${['Garage','Assurance','Expert','Carrossier','Concessionnaire','Autre'].map(t=>`<option ${t===p.type?'selected':''}>${t}</option>`).join('')}
@@ -1028,8 +1076,8 @@ function buildPartsEdit(){
   });
 }
 
-function addPart(){partners.push({nom:'Nouveau partenaire',type:'Garage',rem:10});buildPartsEdit();refreshPartSelects();}
-function removePart(i){partners.splice(i,1);buildPartsEdit();refreshPartSelects();}
+function addPart(){partners.push({nom:'Nouveau partenaire',type:'Garage',rem:10});buildPartsEdit();refreshPartSelects();saveGrilles();}
+function removePart(i){partners.splice(i,1);buildPartsEdit();refreshPartSelects();saveGrilles();}
 
 function refreshPartSelects(){
   ['f-part','d-part'].forEach(id=>{
@@ -1291,7 +1339,7 @@ tr:nth-child(even) td{background:#f8f9fa;}
       ELEMENTS.forEach((_,i)=>{
         const alu=aluState['f'+i];const ptp=ptpState[i];const grille=getGrille(i);
         let elTotal=0;
-        for(let ci=0;ci<5;ci++){const nb=gv(`fc-${i}-${ci}`);if(nb){const px=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);elTotal+=nb*px;}}
+        for(let ci=0;ci<5;ci++){const nb=gv(`fc-${i}-${ci}`);if(nb){elTotal+=getPrixGrille(grille,nb,ci)*(alu?aluMaj():1)*(ptp?ptpMaj():1);}}
         totalHT+=overrideState[i]!==null&&overrideState[i]!==undefined?overrideState[i]:elTotal;
       });
       DEMS.forEach((d,i)=>{if(demChecked[i])totalHT+=forf(d.key);});
