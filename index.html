@@ -267,7 +267,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
       <div class="sec-title">Véhicule</div>
       <div class="g2">
         <div class="field"><label>Marque / Modèle</label><input type="text" id="f-modele" placeholder="Peugeot 308" inputmode="text" oninput="syncDevisFromFiche()"></div>
-        <div class="field"><label>Immatriculation</label><input type="text" id="f-immat" placeholder="AB-123-CD" inputmode="text" autocapitalize="characters" oninput="syncDevisFromFiche()"></div>
+        <div class="field"><label>Immatriculation</label><input type="text" id="f-immat" placeholder="AB-123-CD" inputmode="text" autocapitalize="characters" maxlength="9" oninput="formatImmat(this);syncDevisFromFiche()"></div>
         <div class="field"><label>Année</label><input type="text" id="f-annee" placeholder="2022" inputmode="numeric"></div>
         <div class="field"><label>Date</label><input type="date" id="f-date"></div>
         <div class="field"><label>Technicien</label><input type="text" id="f-tech" placeholder="Prénom Nom"></div>
@@ -667,7 +667,7 @@ function buildFicheCards(){
         ${lbls.map((lbl,ci)=>`
         <div class="el-input-wrap">
           <label style="font-size:.6rem">${lbl}</label>
-          <input type="number" min="0" value="0" id="fc-${i}-${ci}" inputmode="numeric" oninput="updateFiche()">
+          <input type="number" min="0" value="0" id="fc-${i}-${ci}" inputmode="numeric" oninput="updateFiche()" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
         </div>`).join('')}
       </div>
       <div id="override-row-${i}" style="display:none;margin-top:8px;padding:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;">
@@ -883,7 +883,14 @@ function updateFiche(){
   syncDevisFromFiche();
 }
 
-// ─── CLIENT TYPE ─────────────────────────────────
+// ─── FORMAT IMMATRICULATION ─────────────────────
+function formatImmat(input){
+  let v=input.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  // Format SIV : AA-123-AA
+  if(v.length>2&&v.length<=5) v=v.slice(0,2)+'-'+v.slice(2);
+  else if(v.length>5) v=v.slice(0,2)+'-'+v.slice(2,5)+'-'+v.slice(5,7);
+  input.value=v;
+}
 let clientType='particulier';
 
 function setClientType(type){
@@ -1189,12 +1196,15 @@ function showToast(msg, color='var(--green)'){
 // ─── PDF / IMPRESSION ────────────────────────────
 function exportPDF(type){
   try{
-    // Collecter les données
     const date=new Date().toLocaleDateString('fr-FR');
     const titles={fiche:"FICHE D'INTERVENTION",devis:'DEVIS / FACTURE'};
+    const immat=($('f-immat').value||$('dv-immat').value||'').replace(/[^A-Z0-9-]/gi,'').toUpperCase()||'SANS-IMMAT';
+    const dateFile=new Date().toISOString().slice(0,10);
+    const prefixes={fiche:'Fiche_DSP',devis:'Devis'};
+    const docName=`${prefixes[type]}_${immat}`;
 
     let html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-<title>DSP Pro — ${titles[type]}</title>
+<title>${docName}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:Arial,sans-serif;font-size:11px;color:#111;background:#fff;padding:14mm;}
@@ -1363,7 +1373,11 @@ tr:nth-child(even) td{background:#f8f9fa;}
 
     // FOOTER
     html+=`<div class="footer"><span>DSP Pro</span><span>${date}</span></div>
-<script>window.onload=()=>{window.print();}<\/script>
+<div style="margin-top:20px;text-align:center;display:flex;gap:10px;justify-content:center;">
+  <button onclick="window.print()" style="padding:12px 28px;background:#1e4fb0;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨 Imprimer / Enregistrer PDF</button>
+  <button onclick="window.close()" style="padding:12px 28px;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">✕ Fermer</button>
+</div>
+<script>window.onload=()=>{}<\/script>
 </body></html>`;
 
     // Ouvrir dans nouvel onglet et imprimer
@@ -1377,7 +1391,7 @@ tr:nth-child(even) td{background:#f8f9fa;}
       const blob=new Blob([html],{type:'text/html'});
       const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);
-      a.download=(type==='fiche'?'Fiche_DSP':'Devis')+'_'+new Date().toISOString().slice(0,10)+'.html';
+      a.download=docName+'.html';
       a.click();
       showToast('✓ Fichier téléchargé');
     }
