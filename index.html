@@ -1250,19 +1250,21 @@ tr:nth-child(even) td{background:#f8f9fa;}
       const nom=$('c-nom').value;
       const societe=$('c-societe')?.value||'';
       const clientNom=clientType==='professionnel'&&societe?societe+(nom?' — '+nom:''):nom;
-      html+=`<div class="section-title">Client & Véhicule</div>
-<div class="grid3">
-  <div class="info-block"><label>Nom</label><span>${clientNom||'—'}</span></div>
-  <div class="info-block"><label>Téléphone</label><span>${$('c-tel').value||'—'}</span></div>
-  <div class="info-block"><label>N° Police</label><span>${$('c-police').value||'—'}</span></div>
-  <div class="info-block" style="grid-column:span 2"><label>Adresse</label><span>${$('c-adresse').value||'—'}</span></div>
-  <div class="info-block"><label>Email</label><span>${$('c-email').value||'—'}</span></div>
-  <div class="info-block"><label>Véhicule</label><span>${$('f-modele').value||'—'}</span></div>
-  <div class="info-block"><label>Immatriculation</label><span>${$('f-immat').value||'—'}</span></div>
-  <div class="info-block"><label>Date</label><span>${$('f-date').value||'—'}</span></div>
-  <div class="info-block"><label>Technicien</label><span>${$('f-tech').value||'—'}</span></div>
-  <div class="info-block"><label>N° Dossier</label><span>${$('f-dossier').value||'—'}</span></div>
-</div>`;
+      html+=`<div style="display:flex;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
+<span style="font-size:7px;color:#888;">Client :</span><span style="font-size:7px;font-weight:700;">${clientNom||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Tél :</span><span style="font-size:7px;">${$('c-tel').value||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Police :</span><span style="font-size:7px;">${$('c-police').value||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Véhicule :</span><span style="font-size:7px;font-weight:700;">${$('f-modele').value||'—'} ${$('f-immat').value||''}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Date :</span><span style="font-size:7px;">${$('f-date').value||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Tech :</span><span style="font-size:7px;">${$('f-tech').value||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Dossier :</span><span style="font-size:7px;">${$('f-dossier').value||'—'}</span>
+</div><hr style="border:none;border-top:1px solid #e5e7eb;margin-bottom:6px;">`;
 
       // TOTAL BOSSES
       const colLabels=['Ø10-15','Ø20-25','Ø30-35','Ø40-45','Ø>45'];
@@ -1307,26 +1309,21 @@ tr:nth-child(even) td{background:#f8f9fa;}
 
     if(type==='devis'){
       // INFOS SOCIÉTÉ + CLIENT
-      html+=`<div class="grid2">
-<div><div class="section-title">Société</div>
-<div class="info-block">
-  <label>Nom société</label><span>${$('ds-nom').value||'—'}</span><br>
-  <label style="margin-top:4px">SIRET</label><span>${$('ds-siret').value||'—'}</span><br>
-  <label style="margin-top:4px">Adresse</label><span>${$('ds-adresse').value||'—'}</span><br>
-  <label style="margin-top:4px">Tél</label><span>${$('ds-tel').value||'—'}</span>
-</div></div>
-<div><div class="section-title">Client</div>
-<div class="info-block">
-  <label>Nom</label><span>${$('dc-nom').value||'—'}</span><br>
-  <label style="margin-top:4px">Adresse</label><span>${$('dc-adresse').value||'—'}</span><br>
-  <label style="margin-top:4px">Tél</label><span>${$('dc-tel').value||'—'}</span><br>
-  <label style="margin-top:4px">N° Police</label><span>${$('dc-police').value||'—'}</span>
-</div></div></div>`;
-
-      html+=`<div class="grid2" style="margin-bottom:10px;">
-<div class="info-block"><label>Véhicule</label><span>${$('dv-modele').value||'—'} ${$('dv-immat').value||''}</span></div>
-<div class="info-block"><label>N° Devis</label><span>${$('dc-num').value||'—'}</span></div>
-</div>`;
+      html+=`<div style="display:flex;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
+<span style="font-size:7px;color:#888;">Société :</span><span style="font-size:7px;font-weight:700;">${$('ds-nom').value||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">SIRET :</span><span style="font-size:7px;">${$('ds-siret').value||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Client :</span><span style="font-size:7px;font-weight:700;">${$('dc-nom').value||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Tél :</span><span style="font-size:7px;">${$('dc-tel').value||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Police :</span><span style="font-size:7px;">${$('dc-police').value||'—'}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">Véhicule :</span><span style="font-size:7px;font-weight:700;">${$('dv-modele').value||'—'} ${$('dv-immat').value||''}</span>
+<span style="font-size:7px;color:#ccc;">|</span>
+<span style="font-size:7px;color:#888;">N° Devis :</span><span style="font-size:7px;">${$('dc-num').value||'—'}</span>
+</div><hr style="border:none;border-top:1px solid #e5e7eb;margin-bottom:6px;">`;
 
       // PRESTATIONS
       html+=`<div class="section-title">Prestations</div>
